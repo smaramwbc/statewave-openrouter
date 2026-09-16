@@ -1,0 +1,48 @@
+name: Release
+
+# Tag-driven: `git tag v1.0.0 && git push --tags` publishes both artifacts.
+#
+# Two things must exist before the first tag, or the jobs below fail:
+#   1. a PyPI trusted publisher for project `statewave-openrouter`, pointing at
+#      this repo's owner + `release.yml` (no API token to store or rotate);
+#   2. nothing for ghcr - but the package is private on first push, so make it
+#      public afterwards or `docker pull` fails outside the org.
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  pypi:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write  # PyPI trusted publishing; no token secret to rotate
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pip install build
+      - run: python -m build
+      - uses: pypa/gh-action-pypi-publish@release/v1
+
+  image:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: ghcr.io/${{ github.repository }}
+      - uses: docker/build-push-action@v6
+        with:
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}

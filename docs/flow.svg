@@ -1,0 +1,88 @@
+<svg width="1200" height="460" viewBox="0 0 1200 460" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Request flow: client to statewave-openrouter to Statewave and OpenRouter, episode written back asynchronously">
+  <defs>
+    <radialGradient id="flow-glow" cx="50%" cy="0%" r="75%">
+      <stop offset="0%" stop-color="#4a8cff" stop-opacity="0.16"/>
+      <stop offset="60%" stop-color="#7a5cff" stop-opacity="0.06"/>
+      <stop offset="100%" stop-color="#7a5cff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="flow-brand" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#4a8cff"/>
+      <stop offset="100%" stop-color="#7a5cff"/>
+    </linearGradient>
+    <marker id="m-req" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4a8cff"/>
+    </marker>
+    <marker id="m-ret" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#8898b8"/>
+    </marker>
+    <marker id="m-async" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#7a5cff"/>
+    </marker>
+  </defs>
+
+  <rect width="1200" height="460" fill="#0a0f1a"/>
+  <rect width="1200" height="460" fill="url(#flow-glow)"/>
+
+  <!-- actors -->
+  <g font-family="Segoe UI, Verdana, sans-serif" font-size="14" font-weight="700">
+    <rect x="20" y="24" width="180" height="44" rx="9" fill="#101826" stroke="#4a8cff" stroke-width="1.5"/>
+    <text x="110" y="51" text-anchor="middle" fill="#f2f6fc">Client</text>
+
+    <rect x="340" y="24" width="180" height="44" rx="9" fill="#111a2e" stroke="url(#flow-brand)" stroke-width="2"/>
+    <text x="430" y="45" text-anchor="middle" fill="#f2f6fc" font-size="13">statewave-</text>
+    <text x="430" y="60" text-anchor="middle" fill="#f2f6fc" font-size="13">openrouter</text>
+
+    <rect x="660" y="24" width="180" height="44" rx="9" fill="#101826" stroke="#7a5cff" stroke-width="1.5"/>
+    <text x="750" y="51" text-anchor="middle" fill="#f2f6fc">Statewave</text>
+
+    <rect x="970" y="24" width="180" height="44" rx="9" fill="#101826" stroke="#4a8cff" stroke-width="1.5"/>
+    <text x="1060" y="51" text-anchor="middle" fill="#f2f6fc">OpenRouter</text>
+  </g>
+
+  <!-- lifelines -->
+  <g stroke="#26314a" stroke-width="1.5" stroke-dasharray="3 4">
+    <line x1="110" y1="68" x2="110" y2="432"/>
+    <line x1="430" y1="68" x2="430" y2="432"/>
+    <line x1="750" y1="68" x2="750" y2="432"/>
+    <line x1="1060" y1="68" x2="1060" y2="432"/>
+  </g>
+
+  <!-- messages -->
+  <g font-family="Segoe UI, Verdana, sans-serif" font-size="12.5">
+    <!-- 1: client -> proxy -->
+    <circle cx="110" cy="110" r="10" fill="url(#flow-brand)"/>
+    <text x="110" y="114" text-anchor="middle" font-size="11" font-weight="700" fill="#0a0f1a">1</text>
+    <line x1="122" y1="110" x2="422" y2="110" stroke="#4a8cff" stroke-width="1.75" marker-end="url(#m-req)"/>
+    <text x="270" y="101" text-anchor="middle" fill="#c7d6f2">POST /v1/chat/completions</text>
+
+    <!-- 2: proxy -> statewave (context) -->
+    <circle cx="430" cy="158" r="10" fill="url(#flow-brand)"/>
+    <text x="430" y="162" text-anchor="middle" font-size="11" font-weight="700" fill="#0a0f1a">2</text>
+    <line x1="442" y1="158" x2="742" y2="158" stroke="#4a8cff" stroke-width="1.75" marker-end="url(#m-req)"/>
+    <text x="590" y="149" text-anchor="middle" fill="#c7d6f2">POST /v1/context (subject)</text>
+
+    <!-- 3: statewave -> proxy (return) -->
+    <line x1="742" y1="206" x2="442" y2="206" stroke="#8898b8" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#m-ret)"/>
+    <text x="590" y="197" text-anchor="middle" fill="#8898b8">assembled_context</text>
+
+    <!-- 4: proxy -> openrouter -->
+    <circle cx="430" cy="254" r="10" fill="url(#flow-brand)"/>
+    <text x="430" y="258" text-anchor="middle" font-size="11" font-weight="700" fill="#0a0f1a">3</text>
+    <line x1="442" y1="254" x2="1052" y2="254" stroke="#4a8cff" stroke-width="1.75" marker-end="url(#m-req)"/>
+    <text x="745" y="245" text-anchor="middle" fill="#c7d6f2">messages = [system(context), ...original]</text>
+
+    <!-- 5: openrouter -> proxy (return) -->
+    <line x1="1052" y1="302" x2="442" y2="302" stroke="#8898b8" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#m-ret)"/>
+    <text x="745" y="293" text-anchor="middle" fill="#8898b8">completion</text>
+
+    <!-- 6: proxy -> client (return) -->
+    <line x1="422" y1="350" x2="122" y2="350" stroke="#8898b8" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#m-ret)"/>
+    <text x="270" y="341" text-anchor="middle" fill="#8898b8">completion (verbatim bytes)</text>
+
+    <!-- 7: proxy -> statewave, async episode write -->
+    <circle cx="430" cy="398" r="10" fill="#7a5cff"/>
+    <text x="430" y="402" text-anchor="middle" font-size="11" font-weight="700" fill="#0a0f1a">4</text>
+    <line x1="442" y1="398" x2="742" y2="398" stroke="#7a5cff" stroke-width="1.75" stroke-dasharray="2 4" marker-end="url(#m-async)"/>
+    <text x="590" y="389" text-anchor="middle" fill="#d8ccff">POST /v1/episodes - async, off the reply path</text>
+  </g>
+</svg>

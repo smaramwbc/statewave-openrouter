@@ -1,0 +1,65 @@
+<svg width="1200" height="300" viewBox="0 0 1200 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="statewave-openrouter: OpenAI-compatible proxy that gives OpenRouter calls Statewave memory">
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="45%" r="65%">
+      <stop offset="0%" stop-color="#4a8cff" stop-opacity="0.28"/>
+      <stop offset="55%" stop-color="#7a5cff" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#7a5cff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="brand" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#4a8cff"/>
+      <stop offset="100%" stop-color="#7a5cff"/>
+    </linearGradient>
+  </defs>
+
+  <!-- statewave.ai's own dark surface + accent gradient (#4a8cff -> #7a5cff) -->
+  <rect width="1200" height="300" fill="#0a0f1a"/>
+  <rect x="600" width="600" height="300" fill="url(#glow)"/>
+
+  <!-- title block -->
+  <text x="56" y="118" font-family="Segoe UI, Verdana, sans-serif" font-size="40" font-weight="700" fill="#f2f6fc">statewave-openrouter</text>
+  <text x="56" y="150" font-family="Segoe UI, Verdana, sans-serif" font-size="17" fill="#b7c5e3">Drop-in proxy: OpenRouter + Statewave memory</text>
+  <text x="56" y="182" font-family="Consolas, monospace" font-size="15" fill="#7ec8ff">pip install statewave-openrouter</text>
+  <rect x="56" y="204" width="230" height="3" rx="1.5" fill="url(#brand)"/>
+
+  <!-- architecture diagram: layered, containment + connector dots, no arrowheads -->
+  <g font-family="Segoe UI, Verdana, sans-serif">
+    <!-- client -->
+    <rect x="790" y="28" width="160" height="42" rx="9" fill="#101826" stroke="#4a8cff" stroke-width="1.5"/>
+    <text x="870" y="54" text-anchor="middle" font-size="14" fill="#f2f6fc">Your app</text>
+
+    <!-- connector: client -> proxy -->
+    <line x1="870" y1="70" x2="870" y2="95" stroke="#3a4a63" stroke-width="2"/>
+    <circle cx="870" cy="70" r="3" fill="#4a8cff"/>
+    <circle cx="870" cy="95" r="3" fill="#4a8cff"/>
+
+    <!-- proxy container -->
+    <rect x="650" y="95" width="440" height="112" rx="14" fill="#111a2e" stroke="url(#brand)" stroke-width="2"/>
+    <text x="870" y="119" text-anchor="middle" font-size="15" font-weight="700" fill="#f2f6fc">statewave-openrouter</text>
+
+    <rect x="666" y="134" width="128" height="32" rx="16" fill="#1b2440" stroke="#4a8cff" stroke-width="1"/>
+    <text x="730" y="155" text-anchor="middle" font-size="11.5" fill="#c7d6f2">context inject</text>
+
+    <rect x="806" y="134" width="118" height="32" rx="16" fill="#1b2440" stroke="#6366f1" stroke-width="1"/>
+    <text x="865" y="155" text-anchor="middle" font-size="11.5" fill="#c7d6f2">route adapt</text>
+
+    <rect x="936" y="134" width="134" height="32" rx="16" fill="#1b2440" stroke="#7a5cff" stroke-width="1"/>
+    <text x="1003" y="155" text-anchor="middle" font-size="11.5" fill="#c7d6f2">episode write</text>
+
+    <text x="870" y="192" text-anchor="middle" font-size="11" fill="#8898b8">context in, episode out - async, off the reply path</text>
+
+    <!-- connectors: proxy -> the two backends (plain lines, no arrows) -->
+    <line x1="790" y1="207" x2="720" y2="240" stroke="#3a4a63" stroke-width="2"/>
+    <line x1="950" y1="207" x2="1020" y2="240" stroke="#3a4a63" stroke-width="2"/>
+    <circle cx="790" cy="207" r="3" fill="#7a5cff"/>
+    <circle cx="950" cy="207" r="3" fill="#7a5cff"/>
+    <circle cx="720" cy="240" r="3" fill="#7a5cff"/>
+    <circle cx="1020" cy="240" r="3" fill="#7a5cff"/>
+
+    <!-- backends -->
+    <rect x="630" y="240" width="180" height="42" rx="9" fill="#101826" stroke="#4a8cff" stroke-width="1.5"/>
+    <text x="720" y="266" text-anchor="middle" font-size="14" fill="#f2f6fc">OpenRouter</text>
+
+    <rect x="930" y="240" width="180" height="42" rx="9" fill="#101826" stroke="#7a5cff" stroke-width="1.5"/>
+    <text x="1020" y="266" text-anchor="middle" font-size="14" fill="#f2f6fc">Statewave</text>
+  </g>
+</svg>
