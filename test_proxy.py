@@ -693,3 +693,29 @@ async def test_startup_is_quiet_when_statewave_is_current(monkeypatch, caplog):
     with caplog.at_level("WARNING"):
         await sw._warn_if_statewave_outdated()
     assert caplog.text == ""
+
+
+async def test_jwt_is_verified_only_once_per_request(calls, proxy, monkeypatch):
+    monkeypatch.setattr(sw, "JWT_SECRET", SECRET)
+
+    original_decode = sw.jwt.decode
+    decode_calls = 0
+
+    def counting_decode(*args, **kwargs):
+        nonlocal decode_calls
+        decode_calls += 1
+        return original_decode(*args, **kwargs)
+
+    monkeypatch.setattr(sw.jwt, "decode", counting_decode)
+
+    response = await proxy.post(
+        "/v1/chat/completions",
+        headers={"X-Statewave-Token": token("user:42")},
+        json={
+            "model": "x",
+            "messages": [{"role": "user", "content": "hi"}],
+        },
+    )
+
+    assert response.status_code == 200
+    assert decode_calls == 1

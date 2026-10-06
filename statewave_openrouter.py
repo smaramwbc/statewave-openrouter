@@ -125,24 +125,44 @@ async def _require_token(request: Request, call_next):
 
     Gating inside the three completion handlers left `passthrough` asking for
     nothing: dropping `/v1` from the path routed the same request there, and it
-    reached OpenRouter on `OPENROUTER_API_KEY`. Off entirely when no secret is
-    configured; `_resolve_subject` still derives the subject from the token it
-    verifies again (S3).
+    reached OpenRouter on `OPENROUTER_API_KEY`. Off entirely when no secret is 
+    configured; verified claims are stored on request.state for `_resolve_subject` 
+    to reuse.
     """
     if not JWT_SECRET or request.url.path == "/health":
         return await call_next(request)
+
+    claims, error = _verify_token(request)
+
+    if error is not None:
+        return error
+
+    request.state.statewave_claims = claims
+
+    return await call_next(request)
+
+
+def _verify_token(request: Request) -> tuple[dict | None, JSONResponse | None]:
+    """Return (claims, None) or (None, 401 response)."""
     token = request.headers.get("x-statewave-token", "").strip()
+
     if token[:7].lower() == "bearer ":
         token = token[7:].strip()
     if not token:
-        return _error(
-            401, "statewave requires a token in X-Statewave-Token", "statewave_auth_required"
+        return None, _error(
+            401, 
+            "statewave requires a token in X-Statewave-Token", 
+            "statewave_auth_required"
         )
     try:
-        jwt.decode(token, JWT_SECRET, algorithms=["HS256"], options={"require": ["exp"]})
+        claims = jwt.decode(token, JWT_SECRET, algorithms=["HS256"], options={"require": ["exp"]})
     except jwt.InvalidTokenError as exc:
-        return _error(401, f"invalid statewave token: {exc}", "statewave_bad_token")
-    return await call_next(request)
+        return None, _error(
+            401,
+            f"invalid statewave token: {exc}", 
+            "statewave_bad_token"
+        )
+    return claims, None
 
 
 def _spawn(coro) -> None:
@@ -400,26 +420,26 @@ def _resolve_subject(
             )
 
     if JWT_SECRET:
-        token = request.headers.get("x-statewave-token", "").strip()
-        if token[:7].lower() == "bearer ":
-            token = token[7:].strip()
-        if not token:
-            return None, None, None, _error(
-                401, "statewave requires a token in X-Statewave-Token", "statewave_auth_required"
-            )
-        try:
-            claims = jwt.decode(
-                token, JWT_SECRET, algorithms=["HS256"], options={"require": ["exp"]}
-            )
-        except jwt.InvalidTokenError as exc:
-            return None, None, None, _error(
-                401, f"invalid statewave token: {exc}", "statewave_bad_token"
-            )
-        subject = hdr_subject if (TRUST_CLIENT_SUBJECT and hdr_subject) else claims.get("sub")
+        claims = getattr(request.state, "statewave_claims", None)
+
+        if claims is None:
+            claims, error = _verify_token(request)
+            if error is not None:
+                return None, None, None, error
+
+        subject = (
+            hdr_subject
+            if TRUST_CLIENT_SUBJECT and hdr_subject
+            else claims.get("sub")
+        )
+
         if subject and not ID_RE.fullmatch(subject):
             return None, None, None, _error(
-                400, "statewave token 'sub' is not a valid subject id", "statewave_bad_request"
+                400,
+                "statewave token 'sub' is not a valid subject id",
+                "statewave_bad_request",
             )
+
         return subject, session_id, claims, None
 
     if hdr_subject and not TRUST_CLIENT_SUBJECT:
