@@ -750,6 +750,46 @@ async def test_startup_is_quiet_when_statewave_is_current(monkeypatch, caplog):
     assert caplog.text == ""
 
 
+@pytest.mark.parametrize(
+    "messages",
+    [
+        ["hi"],  # list of strings instead of list of dicts
+        {"role": "user"},  # dict instead of list
+        # Must sit inside a user message: at the top level of `messages` there is no
+        # `role: "user"`, so _chat_prompt skips it and the text filter is never reached.
+        [{"role": "user", "content": [{"type": "image_url", "image_url": {}, "text": None}]}],
+    ],
+)
+async def test_malformed_messages_do_not_500_prompt_extraction(proxy, calls, trusted, messages):
+    response = await proxy.post(
+        "/v1/chat/completions",
+        headers={"X-Statewave-Subject": "user:42"},
+        json={"model": "x", "messages": messages},
+    )
+    await drain()
+    # #489 asks only that this not 500. Pass-through is the current behaviour, but a
+    # 400 statewave_bad_request would satisfy the issue too, so do not pin 200.
+    assert response.status_code != 500
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {"input": "hi"},
+        {"input": [{"role": "user", "content": [{"type": "input_text", "text": None}]}]},
+    ],
+)
+async def test_malformed_responses_input_does_not_500(proxy, calls, trusted, payload):
+    # _responses_prompt received the identical guard and had no coverage.
+    response = await proxy.post(
+        "/v1/responses",
+        headers={"X-Statewave-Subject": "user:42"},
+        json={"model": "x", **payload},
+    )
+    await drain()
+    assert response.status_code != 500
+
+
 def test_default_statewave_url_port(monkeypatch):
     # STATEWAVE_URL is read at import time, so deleting it from the environment does
     # nothing to the already-bound module attribute: without the reload this asserts

@@ -31,6 +31,9 @@ All notable changes to this project are documented here. Format loosely follows
   raises mid-stream. The status was already sent, so this truncated the
   client's stream instead of erroring; such a line now counts as carrying no
   text, like a comment or `[DONE]`.
+- Malformed message arrays (non-dict items or non-list message containers) and
+  multimodal content parts with null `text` values no longer crash prompt
+  extraction with a 500. Non-dict items and non-string text parts are safely skipped.
 
 ## [1.0.0] - 2026-09-08
 

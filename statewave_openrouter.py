@@ -219,18 +219,25 @@ def _choice_text(event: dict, container: str | None, field: str) -> str:
 #   responses        - `input` + top-level `instructions`
 
 def _chat_prompt(body: dict) -> str:
-    for message in reversed(body.get("messages") or []):
-        if message.get("role") == "user":
+    messages = body.get("messages")
+    if not isinstance(messages, list):
+        return ""
+    for message in reversed(messages):
+        if isinstance(message, dict) and message.get("role") == "user":
             content = message.get("content")
             if isinstance(content, str):
                 return content
             if isinstance(content, list):  # multimodal parts
-                return " ".join(p.get("text", "") for p in content if isinstance(p, dict))
+                return " ".join(
+                    p["text"] for p in content if isinstance(p, dict) and isinstance(p.get("text"), str)
+                )
     return ""
 
 
 def _chat_inject(body: dict, context: str) -> None:
-    body["messages"] = [{"role": "system", "content": context}, *(body.get("messages") or [])]
+    messages = body.get("messages")
+    base_messages = messages if isinstance(messages, list) else []
+    body["messages"] = [{"role": "system", "content": context}, *base_messages]
 
 
 def _chat_json_reply(payload: dict) -> str:
@@ -287,7 +294,9 @@ def _responses_prompt(body: dict) -> str:
                 if isinstance(content, str):
                     return content
                 if isinstance(content, list):
-                    return " ".join(p.get("text", "") for p in content if isinstance(p, dict))
+                    return " ".join(
+                        p["text"] for p in content if isinstance(p, dict) and isinstance(p.get("text"), str)
+                    )
     return ""
 
 
