@@ -474,8 +474,10 @@ async def _memory_proxy(request: Request, path: str, *, get_prompt, inject, json
     model = body.get("model", "")
 
     def record(reply: str) -> None:
-        # F14: an empty reply is not a turn worth remembering - both paths skip it.
-        if subject and reply:
+        # F14: an empty reply is not a turn worth remembering - both paths skip it. Nor is
+        # an empty prompt, which is all a malformed `messages` can yield: without this the
+        # proxy stops 500ing but still writes a user turn with no user text.
+        if subject and reply and prompt:
             _spawn(_write_turn(subject, session_id, prompt, reply, model, sw_headers))
 
     if not body.get("stream"):
